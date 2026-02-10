@@ -36,10 +36,9 @@ class SplashController extends GetxController {
     // IMPORTANT : On utilise Get.offAllNamed pour s'assurer que le Splash 
     // et ses timers sont supprimés de la pile de navigation.
     if (!authController.isFirstTime) {
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(Routes.MAIN);
     } else {
-      // Assure-toi que Routes.ONBOARDING correspond bien à '/onboarding'
-      Get.offAllNamed('/onboarding'); 
+      Get.offAllNamed('/onboarding');
     }
   }
 

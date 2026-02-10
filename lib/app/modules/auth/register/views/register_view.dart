@@ -119,7 +119,7 @@ class RegisterView extends GetView<RegisterController> {
                         name: fullnameController.text,
                         email: emailController.text,
                       );
-                      Get.offAllNamed(Routes.HOME); // Navigate to home
+                      Get.offAllNamed(Routes.MAIN); // Navigate to main
                     }
                   },
                   style: ElevatedButton.styleFrom(

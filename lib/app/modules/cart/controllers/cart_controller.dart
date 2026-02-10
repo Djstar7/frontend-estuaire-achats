@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'product_controller.dart';
+import '../../../data/models/product.dart';
 
 class CartItem {
   final Product product;
@@ -12,29 +12,25 @@ class CartItem {
 }
 
 class CartController extends GetxController {
-  var cartItems = <CartItem>[].obs;
-  
-  @override
-  void onInit() {
-    super.onInit();
-  }
+  final cartItems = <CartItem>[].obs;
 
   int get itemCount => cartItems.fold(0, (sum, item) => sum + item.quantity);
 
   double get totalPrice => cartItems.fold(0, (sum, item) {
-    double itemPrice = item.product.isOnSale && item.product.salePrice != null
-        ? item.product.salePrice!
-        : item.product.price;
-    return sum + (itemPrice * item.quantity);
-  });
+        final price = item.product.price ?? 0;
+        return sum + (price * item.quantity);
+      });
 
-  void addToCart(Product product) {
-    var existingItem = cartItems.firstWhereOrNull((item) => item.product.id == product.id);
+  void addToCart(Product product, {int quantity = 1}) {
+    final existingItem = cartItems.firstWhereOrNull(
+      (item) => item.product.id == product.id,
+    );
     if (existingItem != null) {
-      existingItem.quantity++;
-    } else {
-      cartItems.add(CartItem(product: product));
+      existingItem.quantity += quantity;
+      cartItems.refresh();
+      return;
     }
+    cartItems.add(CartItem(product: product, quantity: quantity));
   }
 
   void removeFromCart(int productId) {
@@ -46,10 +42,13 @@ class CartController extends GetxController {
       removeFromCart(productId);
       return;
     }
-    
-    var item = cartItems.firstWhereOrNull((item) => item.product.id == productId);
+
+    final item = cartItems.firstWhereOrNull(
+      (item) => item.product.id == productId,
+    );
     if (item != null) {
       item.quantity = newQuantity;
+      cartItems.refresh();
     }
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_estuaire_achats/app/modules/auth/controllers/auth_controller.dart';
 import 'package:frontend_estuaire_achats/app/routes/app_pages.dart';
 import 'package:get/get.dart';
 import 'package:frontend_estuaire_achats/app/modules/auth/widgets/custom_textfield.dart';
@@ -13,7 +12,6 @@ class LoginView extends GetView<LoginController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final TextEditingController emailController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
-    final AuthController authController = Get.find<AuthController>();
 
     return Scaffold(
       body: SafeArea(
@@ -78,49 +76,68 @@ class LoginView extends GetView<LoginController> {
                 child: TextButton(
                   onPressed: () {
                     // Navigate to forgot password screen
-                    // Get.to(() => const ForgotPasswordScreen());
+                    Get.toNamed(Routes.FORGOTPASSWORD);
                   },
                   child: Text(
                     'Mot de passe oublié?',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                    ),
+                    style: TextStyle(color: Theme.of(context).primaryColor),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Validate form
-                    if (emailController.text.isNotEmpty && 
-                        GetUtils.isEmail(emailController.text) &&
-                        passwordController.text.length >= 6) {
-                      authController.login(
-                        name: 'Utilisateur',
-                        email: emailController.text,
-                      );
-                      Get.offAllNamed(Routes.HOME); // Navigate to home
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Obx(() {
+                  return ElevatedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : () async {
+                            if (emailController.text.isNotEmpty &&
+                                GetUtils.isEmail(emailController.text) &&
+                                passwordController.text.length >= 6) {
+                              final ok = await controller.login(
+                                emailController.text.trim(),
+                                passwordController.text.trim(),
+                              );
+                              if (ok) {
+                                Get.offAllNamed(Routes.MAIN);
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Se connecter',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+                    child: controller.isLoading.value
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'Se connecter',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                  );
+                }),
               ),
+              const SizedBox(height: 12),
+              Obx(() {
+                if (controller.errorMessage.value.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  controller.errorMessage.value,
+                  style: const TextStyle(color: Colors.red),
+                );
+              }),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -133,7 +150,7 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Get.toNamed('/register'),
+                    onPressed: () => Get.toNamed(Routes.REGISTER),
                     child: Text(
                       'S\'inscrire',
                       style: TextStyle(

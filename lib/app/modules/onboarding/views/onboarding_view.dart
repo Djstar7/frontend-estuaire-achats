@@ -41,7 +41,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     final AuthController authController = Get.find<AuthController>();
     authController.setFirstTimeDone();
     // Navigate to home screen
-    Get.offAllNamed(Routes.HOME);
+    Get.offAllNamed(Routes.MAIN);
   }
 
   @override

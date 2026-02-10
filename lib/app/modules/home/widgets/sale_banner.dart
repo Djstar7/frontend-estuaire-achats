@@ -51,12 +51,11 @@ class SaleBanner extends StatelessWidget {
           ),
           Expanded(
             flex: 1,
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/sale_banner_image.png'), // Placeholder
-                  fit: BoxFit.cover,
-                ),
+            child: Center(
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 64,
+                fit: BoxFit.contain,
               ),
             ),
           ),
