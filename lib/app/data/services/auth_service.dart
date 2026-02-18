@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
+
 import '../models/user.dart';
+import '../storage/local_storage_service.dart';
 import 'api_client.dart';
 import 'exceptions/app_exception.dart';
 
 class AuthService {
-  final ApiClient _apiClient = Get.find();
-  final GetStorage _storage = GetStorage();
+  final ApiClient _apiClient = Get.find<ApiClient>();
+  final LocalStorageService _storage = Get.find<LocalStorageService>();
 
   Future<User> login(String email, String password) async {
     try {
@@ -22,7 +23,7 @@ class AuthService {
       final token = body['token'] ??
           (body['data'] is Map ? body['data']['token'] : null);
       if (token != null) {
-        await _storage.write('auth_token', token);
+        await _storage.saveAuthToken(token);
       }
       
       if (body['user'] != null) {
@@ -54,7 +55,7 @@ class AuthService {
       final token = body['token'] ??
           (body['data'] is Map ? body['data']['token'] : null);
       if (token != null) {
-        await _storage.write('auth_token', token);
+        await _storage.saveAuthToken(token);
       }
       
       if (body['user'] != null) {
@@ -90,8 +91,8 @@ class AuthService {
     } catch (e) {
       rethrow;
     } finally {
-      // Clear the stored token
-      await _storage.remove('auth_token');
+      // Clear the stored token et l'état d'authentification local
+      await _storage.clearAuthData();
     }
   }
 }

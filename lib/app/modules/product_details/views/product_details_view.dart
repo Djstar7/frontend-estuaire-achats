@@ -1,4 +1,4 @@
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart' as carousel;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/product.dart';
@@ -7,8 +7,35 @@ import '../../../modules/cart/controllers/cart_controller.dart';
 import '../../../modules/products/controllers/products_controller.dart';
 import '../../../utils/formatters.dart';
 
-class ProductDetailsView extends StatelessWidget {
+class ProductDetailsView extends StatefulWidget {
   const ProductDetailsView({super.key});
+
+  @override
+  State<ProductDetailsView> createState() => _ProductDetailsViewState();
+}
+
+class _ProductDetailsViewState extends State<ProductDetailsView> {
+  int _currentImageIndex = 0;
+  final carousel.CarouselSliderController _carouselController = carousel.CarouselSliderController();
+
+  void _goToPreviousImage() {
+    _carouselController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  }
+
+  void _goToNextImage() {
+    _carouselController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  }
+
+  void _updateCurrentIndex(int index) {
+    setState(() {
+      _currentImageIndex = index;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +50,8 @@ class ProductDetailsView extends StatelessWidget {
     }
 
     final images = product.images ?? [];
+    final stock = product.quantity ?? 0;
+    final isOutOfStock = stock <= 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -45,16 +74,84 @@ class ProductDetailsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (images.isNotEmpty)
-              CarouselSlider(
-                options: CarouselOptions(
-                  height: 260,
-                  viewportFraction: 1,
-                ),
-                items: images
-                    .map(
-                      (image) => _ProductImage(imageUrl: image),
-                    )
-                    .toList(),
+              Stack(
+                children: [
+                  carousel.CarouselSlider.builder(
+                    carouselController: _carouselController,
+                    itemCount: images.length,
+                    itemBuilder: (BuildContext context, int index, int realIndex) {
+                      return _ProductImage(imageUrl: images[index]);
+                    },
+                    options: carousel.CarouselOptions(
+                      height: 260,
+                      viewportFraction: 1,
+                      onPageChanged: (index, reason) {
+                        _updateCurrentIndex(index);
+                      },
+                    ),
+                  ),
+                  if (images.length > 1)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_currentImageIndex + 1}/${images.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Left arrow
+                  if (images.length > 1)
+                    Positioned(
+                      top: 120,
+                      left: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            _goToPreviousImage();
+                          },
+                          icon: const Icon(
+                            Icons.arrow_left,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Right arrow
+                  if (images.length > 1)
+                    Positioned(
+                      top: 120,
+                      right: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            _goToNextImage();
+                          },
+                          icon: const Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               )
             else
               const SizedBox(
@@ -79,6 +176,31 @@ class ProductDetailsView extends StatelessWidget {
                       fontSize: 18,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  // Display brand information if available
+                  if (product.brand != null && product.brand!.name != null)
+                    Text(
+                      'Marque: ${product.brand!.name}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  const SizedBox(height: 8),
+                  // Display stock quantity if available
+                  if (product.quantity != null)
+                    Text(
+                      'Stock: ${product.quantity} unités',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  if (isOutOfStock)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        'Rupture de stock',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: Colors.red),
+                      ),
+                    ),
                   const SizedBox(height: 12),
                   Text(
                     productsController.categoryLabel(product.categoryId),
@@ -98,14 +220,14 @@ class ProductDetailsView extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        cartController.addToCart(product);
-                        Get.snackbar(
-                          'Panier',
-                          'Produit ajouté au panier.',
-                          snackPosition: SnackPosition.BOTTOM,
-                        );
-                      },
+                      onPressed: isOutOfStock
+                          ? null
+                          : () {
+                              _addToCartWithoutDeliveryInfo(
+                                product,
+                                cartController,
+                              );
+                            },
                       icon: const Icon(Icons.shopping_cart_outlined),
                       label: const Text('Ajouter au panier'),
                     ),
@@ -117,6 +239,31 @@ class ProductDetailsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _addToCartWithoutDeliveryInfo(
+    Product product,
+    CartController cartController,
+  ) async {
+    try {
+      // First, add to cart via API (database)
+      await cartController.createDirectOrder(
+        productId: product.id!,
+        quantity: 1, // Default quantity
+      );
+
+      Get.snackbar(
+        'Succès',
+        'Produit ajouté au panier avec succès!',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Erreur',
+        'Impossible d\'ajouter le produit au panier: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }
 

@@ -89,8 +89,10 @@ class OrderService {
 
   Future<Order> updateOrderStatus(int id, String status) async {
     try {
-      final response =
-          await _apiClient.dio.patch('/orders/$id/status', data: {'status': status});
+      final response = await _apiClient.dio.patch(
+        '/orders/$id/status',
+        data: {'status': status},
+      );
       final body = response.data;
       if (body is Map && body['order'] != null) {
         return Order.fromJson(Map<String, dynamic>.from(body['order'] as Map));
@@ -102,6 +104,17 @@ class OrderService {
         return Order.fromJson(Map<String, dynamic>.from(body));
       }
       throw Exception('Invalid order response');
+    } on DioException catch (e) {
+      throw AppException.fromDio(e);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // delete order, cancel order, etc. can be added here
+  Future<void> deleteOrder(int id) async {
+    try {
+      await _apiClient.dio.delete('/orders/$id');
     } on DioException catch (e) {
       throw AppException.fromDio(e);
     } catch (e) {

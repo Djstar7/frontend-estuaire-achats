@@ -55,10 +55,10 @@ class ProductService {
         items = data;
       }
 
-      print('Items: $items');
-
       return items
-          .map((json) => Product.fromJson(Map<String, dynamic>.from(json as Map)))
+          .map(
+            (json) => Product.fromJson(Map<String, dynamic>.from(json as Map)),
+          )
           .toList();
     } on DioException catch (e) {
       throw AppException.fromDio(e);
@@ -75,7 +75,9 @@ class ProductService {
         return Product.fromJson(Map<String, dynamic>.from(data['data'] as Map));
       }
       if (data is Map && data['product'] != null) {
-        return Product.fromJson(Map<String, dynamic>.from(data['product'] as Map));
+        return Product.fromJson(
+          Map<String, dynamic>.from(data['product'] as Map),
+        );
       }
       if (data is Map) {
         return Product.fromJson(Map<String, dynamic>.from(data));
@@ -103,7 +105,9 @@ class ProductService {
         items = [];
       }
       return items
-          .map((json) => Product.fromJson(Map<String, dynamic>.from(json as Map)))
+          .map(
+            (json) => Product.fromJson(Map<String, dynamic>.from(json as Map)),
+          )
           .toList();
     } on DioException catch (e) {
       throw AppException.fromDio(e);
@@ -120,12 +124,49 @@ class ProductService {
         return Product.fromJson(Map<String, dynamic>.from(body['data'] as Map));
       }
       if (body is Map && body['product'] != null) {
-        return Product.fromJson(Map<String, dynamic>.from(body['product'] as Map));
+        return Product.fromJson(
+          Map<String, dynamic>.from(body['product'] as Map),
+        );
       }
       if (body is Map) {
         return Product.fromJson(Map<String, dynamic>.from(body));
       }
       throw Exception('Invalid product response');
+    } on DioException catch (e) {
+      throw AppException.fromDio(e);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Edit product, delete product, etc. can be added here
+  Future<Product> editProduct(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _apiClient.dio.put('/products/$id', data: data);
+      final body = response.data;
+      if (body is Map && body['data'] != null) {
+        return Product.fromJson(Map<String, dynamic>.from(body['data'] as Map));
+      }
+      if (body is Map && body['product'] != null) {
+        return Product.fromJson(
+          Map<String, dynamic>.from(body['product'] as Map),
+        );
+      }
+      if (body is Map) {
+        return Product.fromJson(Map<String, dynamic>.from(body));
+      }
+      throw Exception('Invalid product response');
+    } on DioException catch (e) {
+      throw AppException.fromDio(e);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // delete product
+  Future<void> deleteProduct(int id) async {
+    try {
+      await _apiClient.dio.delete('/products/$id');
     } on DioException catch (e) {
       throw AppException.fromDio(e);
     } catch (e) {

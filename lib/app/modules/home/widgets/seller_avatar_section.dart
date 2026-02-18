@@ -91,7 +91,6 @@ class _SellerAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoUrl = _resolveNetworkUrl(seller.logoUrl);
     final coverUrl = _resolveNetworkUrl(seller.coverImageUrl);
     final initials = seller.initials ?? 'S';
     final orders = seller.ordersCount ?? 0;
@@ -103,30 +102,11 @@ class _SellerAvatar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              height: 70,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey[200],
-                image: coverUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(coverUrl),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: coverUrl == null
-                  ? const Center(
-                      child: Icon(Icons.storefront, color: Colors.grey),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 8),
             CircleAvatar(
               radius: 22,
               backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              backgroundImage: logoUrl != null ? NetworkImage(logoUrl) : null,
-              child: logoUrl == null
+              backgroundImage: coverUrl != null ? NetworkImage(coverUrl) : null,
+              child: coverUrl == null
                   ? Text(
                       initials,
                       style: TextStyle(

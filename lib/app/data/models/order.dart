@@ -45,8 +45,8 @@ class OrderItem {
       'order_id': orderId,
       'product_id': productId,
       'quantity': quantity,
-      'unit_price': unitPrice,
-      'total_price': totalPrice,
+      // 'unit_price': unitPrice,
+      'total_amount': totalPrice,
       'product': product?.toJson(),
     };
   }

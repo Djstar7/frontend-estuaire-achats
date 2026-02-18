@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/cart_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
-import '../../../data/services/order_service.dart';
 import '../../../utils/formatters.dart';
 
 class CartView extends StatelessWidget {
@@ -12,7 +11,6 @@ class CartView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cartController = Get.find<CartController>();
     final authController = Get.find<AuthController>();
-    final orderService = Get.find<OrderService>();
 
     return Scaffold(
       appBar: AppBar(
@@ -97,28 +95,15 @@ class CartView extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
-                        if (!authController.isLoggedIn) {
-                          Get.snackbar(
-                            'Commande',
-                            'Connectez-vous pour passer commande.',
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
+                        if (!await authController.ensureLoggedIn()) {
                           return;
                         }
 
-                        final addressCtrl = TextEditingController();
                         final currencyCtrl = TextEditingController(text: 'XAF');
                         await Get.defaultDialog(
                           title: 'Passer commande',
                           content: Column(
                             children: [
-                              TextField(
-                                controller: addressCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Adresse de livraison',
-                                ),
-                              ),
-                              const SizedBox(height: 12),
                               TextField(
                                 controller: currencyCtrl,
                                 decoration: const InputDecoration(
@@ -130,32 +115,21 @@ class CartView extends StatelessWidget {
                           textConfirm: 'Valider',
                           textCancel: 'Annuler',
                           onConfirm: () async {
-                            final address = addressCtrl.text.trim();
                             final currency = currencyCtrl.text.trim();
-                            if (address.isEmpty || currency.length != 3) {
+                            if (currency.length != 3) {
                               Get.snackbar(
                                 'Commande',
-                                'Adresse et devise valides requises.',
+                                'Devise valide requise.',
                                 snackPosition: SnackPosition.BOTTOM,
                               );
                               return;
                             }
 
-                            final items = cartController.cartItems
-                                .map((item) => {
-                                      'product_id': item.product.id,
-                                      'quantity': item.quantity,
-                                    })
-                                .where((item) => item['product_id'] != null)
-                                .toList();
-
                             try {
-                              await orderService.createOrders({
-                                'items': items,
-                                'delivery_address': address,
-                                'currency': currency.toUpperCase(),
-                              });
-                              cartController.clearCart();
+                              await cartController.createOrdersFromCart(
+                                // deliveryAddress: address,
+                                currency: currency.toUpperCase(),
+                              );
                               Get.back();
                               Get.snackbar(
                                 'Commande',

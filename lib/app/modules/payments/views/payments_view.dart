@@ -30,27 +30,61 @@ class PaymentsView extends GetView<PaymentsController> {
               ),
             ),
             const SizedBox(height: 12),
+            TextField(
+              controller: controller.deliveryAddressController,
+              decoration: const InputDecoration(
+                labelText: 'Adresse de livraison',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller.deliveryZoneController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Zone de livraison (ID, optionnel)',
+              ),
+            ),
+            const SizedBox(height: 12),
             Obx(() {
               return DropdownButtonFormField<String>(
                 value: controller.selectedMethod.value,
                 items: const [
                   DropdownMenuItem(
-                    value: 'mobile_money',
-                    child: Text('Mobile Money'),
+                    value: 'freemopay',
+                    child: Text('FreeMoPay'),
                   ),
                   DropdownMenuItem(
-                    value: 'card',
-                    child: Text('Carte bancaire'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'cash',
-                    child: Text('Cash'),
+                    value: 'paypal',
+                    child: Text('PayPal'),
                   ),
                 ],
                 onChanged: (value) {
                   if (value != null) controller.selectedMethod.value = value;
                 },
                 decoration: const InputDecoration(labelText: 'Méthode'),
+              );
+            }),
+            const SizedBox(height: 12),
+            Obx(() {
+              if (controller.selectedMethod.value != 'freemopay') {
+                return const SizedBox.shrink();
+              }
+              return TextField(
+                controller: controller.phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Téléphone (FreeMoPay)',
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+            Obx(() {
+              final order = controller.order.value;
+              if (order == null) {
+                return const SizedBox.shrink();
+              }
+              return Text(
+                'Total: ${formatCurrency(order.totalAmount)} (${order.currency ?? 'N/A'})',
               );
             }),
             const SizedBox(height: 12),

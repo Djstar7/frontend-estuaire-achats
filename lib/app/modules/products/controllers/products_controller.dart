@@ -141,7 +141,8 @@ class ProductsController extends GetxController {
             description.contains(query);
         final matchesCategory =
             categoryId == null || product.categoryId == categoryId;
-        return matchesQuery && matchesCategory;
+        final inStock = (product.quantity ?? 0) > 0;
+        return matchesQuery && matchesCategory && inStock;
       }).toList(),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/services/api_client.dart';
 import '../data/models/product.dart';
+import '../modules/auth/controllers/auth_controller.dart';
 import '../modules/products/controllers/products_controller.dart';
 import '../utils/formatters.dart';
 
@@ -20,7 +21,10 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final productsController = Get.find<ProductsController>();
+    final authController = Get.find<AuthController>();
     final imageUrl = product.images?.isNotEmpty == true ? product.images!.first : null;
+    final stock = product.quantity ?? 0;
+    final isOutOfStock = stock <= 0;
 
     return InkWell(
       onTap: onTap,
@@ -49,7 +53,10 @@ class ProductCard extends StatelessWidget {
                         ),
                         child: IconButton(
                           iconSize: 18,
-                          onPressed: () => productsController.toggleFavorite(product),
+                          onPressed: () async {
+                            if (!await authController.ensureLoggedIn()) return;
+                            productsController.toggleFavorite(product);
+                          },
                           icon: Icon(
                             isFavorite ? Icons.favorite : Icons.favorite_border,
                             color: isFavorite ? Colors.red : Colors.grey[700],
@@ -84,8 +91,8 @@ class ProductCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: onAddToCart,
-                      child: const Text('Ajouter'),
+                      onPressed: isOutOfStock ? null : onAddToCart,
+                      child: Text(isOutOfStock ? 'Indisponible' : 'Ajouter'),
                     ),
                   ),
                 ],

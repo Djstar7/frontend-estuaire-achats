@@ -20,15 +20,26 @@ class AccountView extends StatelessWidget {
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(authController.userName.isNotEmpty
-                  ? authController.userName
-                  : 'Utilisateur'),
-              subtitle: Text(authController.userEmail.isNotEmpty
-                  ? authController.userEmail
-                  : 'Connectez-vous pour accéder à votre compte'),
+              title: Text(
+                authController.userName.isNotEmpty
+                    ? authController.userName
+                    : 'Utilisateur',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                authController.userEmail.isNotEmpty
+                    ? authController.userEmail
+                    : 'Connectez-vous pour accéder à votre compte',
+              ),
               trailing: TextButton(
-                onPressed: () => Get.toNamed(Routes.LOGIN),
-                child: Text(authController.isLoggedIn ? 'Profil' : 'Se connecter'),
+                onPressed: () async {
+                  if (!authController.isLoggedIn) {
+                    await Get.toNamed(Routes.LOGIN);
+                  }
+                },
+                child: Text(
+                  authController.isLoggedIn ? 'Profil' : 'Se connecter',
+                ),
               ),
             ),
           ),
@@ -44,19 +55,28 @@ class AccountView extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.shopping_basket_outlined),
                   title: const Text('Mes commandes'),
-                  onTap: () => Get.toNamed(Routes.ORDERS),
+                  onTap: () async {
+                    if (!await authController.ensureLoggedIn()) return;
+                    Get.toNamed(Routes.ORDERS);
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.chat_bubble_outline),
                   title: const Text('Conversations'),
-                  onTap: () => Get.toNamed(Routes.CONVERSATIONS),
+                  onTap: () async {
+                    if (!await authController.ensureLoggedIn()) return;
+                    Get.toNamed(Routes.CONVERSATIONS);
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.payments_outlined),
                   title: const Text('Paiements'),
-                  onTap: () => Get.toNamed(Routes.PAYMENTS),
+                  onTap: () async {
+                    if (!await authController.ensureLoggedIn()) return;
+                    Get.toNamed(Routes.PAYMENTS);
+                  },
                 ),
               ],
             ),

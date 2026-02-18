@@ -1,10 +1,10 @@
-import 'dart:io' show Platform, SocketException;
+import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'exceptions/app_exception.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:get/get.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+
+import '../storage/local_storage_service.dart';
 
 class ApiClient extends GetxService {
   static const String _localhostBaseUrl = 'http://127.0.0.1:8000/api/v1';
@@ -12,7 +12,7 @@ class ApiClient extends GetxService {
   static bool get isDebug => kDebugMode;
   
   late Dio _dio;
-  late GetStorage _storage;
+  late LocalStorageService _localStorage;
 
   Dio get dio => _dio;
   String get baseUrl => _resolveBaseUrl();
@@ -20,10 +20,10 @@ class ApiClient extends GetxService {
   @override
   Future<void> onInit() async {
     super.onInit();
-    
-    // Initialize GetStorage
-    _storage = GetStorage();
-    
+
+    // Récupération du service de stockage local centralisé
+    _localStorage = Get.find<LocalStorageService>();
+
     final options = BaseOptions(
       baseUrl: _resolveBaseUrl(),
       connectTimeout: const Duration(seconds: 30),
@@ -78,49 +78,9 @@ class ApiClient extends GetxService {
   }
 
   Future<String?> _getToken() async {
-    // Retrieve token from GetStorage
-    return _storage.read('auth_token');
+    // Récupère le token d'authentification depuis le service de stockage
+    return _localStorage.getAuthToken();
   }
   
-  AppException _handleError(DioException error) {
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return TimeoutException('Request timeout');
-      case DioExceptionType.badResponse:
-        switch (error.response?.statusCode) {
-          case 400:
-            return AppException('Bad Request');
-          case 401:
-            return UnauthorizedException('Unauthorized');
-          case 403:
-            return AppException('Forbidden');
-          case 404:
-            return NotFoundException('Resource not found');
-          case 422:
-            // Handle validation errors
-            final errors = error.response?.data['errors'] as Map<String, dynamic>?;
-            return ValidationException('Validation failed', errors?.cast<String, List<String>>());
-          case 500:
-            return ServerException('Internal Server Error');
-          default:
-            return ServerException('Server Error ${error.response?.statusCode}');
-        }
-      case DioExceptionType.cancel:
-        return AppException('Request cancelled');
-      case DioExceptionType.connectionError:
-        return NetworkException('Connection Error');
-      case DioExceptionType.badCertificate:
-        return NetworkException('Certificate Error');
-      case DioExceptionType.unknown:
-      default:
-        if (error.error is SocketException) {
-          return NoInternetException('No Internet Connection');
-        }
-        return NetworkException('Network Error');
-    }
-  }
-
   Future<void> setBaseUrl(String? s) async {}
 }

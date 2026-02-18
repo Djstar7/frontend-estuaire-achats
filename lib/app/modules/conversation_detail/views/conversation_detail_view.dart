@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../controllers/conversation_detail_controller.dart';
 
 class ConversationDetailView extends GetView<ConversationDetailController> {
@@ -7,6 +8,7 @@ class ConversationDetailView extends GetView<ConversationDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
     final title = controller.conversation?.seller?.name ??
         controller.conversation?.buyer?.name ??
         'Conversation';
@@ -37,16 +39,42 @@ class ConversationDetailView extends GetView<ConversationDetailController> {
                 itemCount: controller.messages.length,
                 itemBuilder: (context, index) {
                   final message = controller.messages[index];
+                  final isMine = message.sender?.email != null &&
+                      message.sender!.email == authController.userEmail;
+
+                  final bubbleColor = isMine
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).colorScheme.surface;
+                  final textColor =
+                      isMine ? Colors.white : Theme.of(context).colorScheme.onSurface;
+
                   return Align(
-                    alignment: Alignment.centerLeft,
+                    alignment:
+                        isMine ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                      child: Text(message.content ?? ''),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                      ),
+                      decoration: BoxDecoration(
+                        color: bubbleColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(16),
+                          topRight: const Radius.circular(16),
+                          bottomLeft:
+                              Radius.circular(isMine ? 16 : 4),
+                          bottomRight:
+                              Radius.circular(isMine ? 4 : 16),
+                        ),
+                      ),
+                      child: Text(
+                        message.content ?? '',
+                        style: TextStyle(color: textColor),
+                      ),
                     ),
                   );
                 },

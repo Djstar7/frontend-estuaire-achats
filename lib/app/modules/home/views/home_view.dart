@@ -19,6 +19,7 @@ class HomeView extends GetView<HomeController> {
     final CartController cartController = Get.find<CartController>();
     final HomeController homeController = Get.find<HomeController>();
     final ProductsController productsController = Get.find<ProductsController>();
+    final AuthController authController = Get.find<AuthController>();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -32,10 +33,11 @@ class HomeView extends GetView<HomeController> {
                 // Header
                 Row(
                   children: [
+                    // Avatar utilisateur
                     Obx(() {
-                      bool isLoggedIn = Get.find<AuthController>().isLoggedIn;
+                      final isLoggedIn = authController.isLoggedIn;
                       return CircleAvatar(
-                        radius: 25,
+                        radius: 26,
                         backgroundImage: isLoggedIn
                             ? const AssetImage('assets/images/logo.png')
                             : null,
@@ -51,40 +53,39 @@ class HomeView extends GetView<HomeController> {
                       );
                     }),
                     const SizedBox(width: 12),
+                    // Texte de bienvenue
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Obx(() {
-                            final authController = Get.find<AuthController>();
                             return Text(
                               authController.isLoggedIn
-                                ? 'Bonjour ${homeController.getUserName()}' 
-                                : 'Bonjour',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
+                                  ? 'Bonjour ${homeController.getUserName()}'
+                                  : 'Bonjour',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                             );
                           }),
+                          const SizedBox(height: 2),
                           Text(
                             homeController.getGreeting(),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ],
                       ),
                     ),
-                    // Theme button - assuming you have a theme controller
+                    // Bouton thème
                     IconButton(
+                      tooltip: 'Changer de thème',
                       onPressed: () {
-                        // Toggle theme logic would go here
                         Get.changeThemeMode(
                           Theme.of(context).brightness == Brightness.light
-                            ? ThemeMode.dark
-                            : ThemeMode.light
+                              ? ThemeMode.dark
+                              : ThemeMode.light,
                         );
                       },
                       icon: Icon(
@@ -93,11 +94,20 @@ class HomeView extends GetView<HomeController> {
                             : Icons.light_mode,
                       ),
                     ),
-                    // Show login button if not logged in, otherwise show cart
-                    // Cart button with badge
+                    // Bouton messages
+                    IconButton(
+                      tooltip: 'Messages',
+                      onPressed: () async {
+                        if (!await authController.ensureLoggedIn()) return;
+                        Get.toNamed(Routes.CONVERSATIONS);
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline),
+                    ),
+                    // Panier avec badge
                     Stack(
                       children: [
                         IconButton(
+                          tooltip: 'Panier',
                           onPressed: () => Get.toNamed(Routes.CART),
                           icon: const Icon(Icons.shopping_bag_outlined),
                         ),
@@ -106,8 +116,8 @@ class HomeView extends GetView<HomeController> {
                             return const SizedBox.shrink();
                           }
                           return Positioned(
-                            right: 0,
-                            top: 0,
+                            right: 4,
+                            top: 4,
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(

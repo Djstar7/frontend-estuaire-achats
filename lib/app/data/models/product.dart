@@ -1,4 +1,5 @@
 import 'package:frontend_estuaire_achats/app/data/models/user.dart';
+import 'package:frontend_estuaire_achats/app/data/models/Brand.dart';
 
 class Product {
   final int? id;
@@ -9,6 +10,7 @@ class Product {
   final int? categoryId;
   final int? sellerId;
   final User? seller;
+  final Brand? brand;
   final List<String>? images;
   final String? status;
   final DateTime? createdAt;
@@ -23,6 +25,7 @@ class Product {
     this.categoryId,
     this.sellerId,
     this.seller,
+    this.brand,
     this.images,
     this.status,
     this.createdAt,
@@ -76,6 +79,7 @@ class Product {
       quantity: parseInt(json['quantity'] ?? json['stock']),
       categoryId: parseInt(json['category_id']),
       sellerId: parseInt(json['seller_id']),
+      brand: json['brand'] != null ? Brand.fromJon(json['brand']) : null,
       seller: json['seller'] != null ? User.fromJson(json['seller']) : null,
       images: parseImages(json['images']) ??
           parseImages(json['image_url']) ??
@@ -98,6 +102,7 @@ class Product {
       'category_id': categoryId,
       'seller_id': sellerId,
       'seller': seller?.toJson(),
+      'brand': brand?.toJson(),
       'images': images,
       'status': status,
       'created_at': createdAt?.toIso8601String(),

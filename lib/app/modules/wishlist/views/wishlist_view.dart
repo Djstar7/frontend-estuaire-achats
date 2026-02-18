@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/wishlist_controller.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../../widgets/product_card.dart';
@@ -11,6 +12,7 @@ class WishlistView extends GetView<WishlistController> {
   @override
   Widget build(BuildContext context) {
     final cartController = Get.find<CartController>();
+    final authController = Get.find<AuthController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +38,8 @@ class WishlistView extends GetView<WishlistController> {
                 Routes.PRODUCT_DETAILS,
                 arguments: product,
               ),
-              onAddToCart: () {
+              onAddToCart: () async {
+                if (!await authController.ensureLoggedIn()) return;
                 cartController.addToCart(product);
                 Get.snackbar(
                   'Panier',
